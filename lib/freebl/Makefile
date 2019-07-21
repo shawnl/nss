@@ -245,11 +245,14 @@ endif
 ifeq ($(CPU_ARCH),aarch64)
     EXTRA_SRCS += gcm-aarch64.c
 endif
-ifeq ($(CPU_ARCH),ppc)
-ifdef USE_64
+ifeq ($(CPU_ARCH),ppc64)
     DEFINES += -DNSS_NO_INIT_SUPPORT
-endif # USE_64
-endif # ppc
+endif # ppc64
+ifeq ($(CPU_ARCH),ppc64le)
+    DEFINES += -DNSS_NO_INIT_SUPPORT
+    DEFINES += -DUSE_PPC_HW_AES
+    ASFILES += rijndael-ppc8.s
+endif # ppc64le
 endif # Linux
 
 ifeq ($(OS_TARGET),AIX)

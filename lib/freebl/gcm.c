@@ -23,6 +23,14 @@
 #define USE_ARM_GCM
 #endif
 
+/* The build system is responsible for choosing the correct version
+ * (32-bit, 64-bit, 64-bit little-endian).
+ */
+#if __ppc64__
+#define USE_PPC_GCM
+#endif
+
+#endif
 /* Forward declarations */
 SECStatus gcm_HashInit_hw(gcmHashContext *ghash);
 SECStatus gcm_HashWrite_hw(gcmHashContext *ghash, unsigned char *outbuf);
@@ -36,7 +44,7 @@ SECStatus gcm_HashMult_sftw32(gcmHashContext *ghash, const unsigned char *buf,
 
 /* Stub definitions for the above *_hw functions, which shouldn't be
  * used unless NSS_X86_OR_X64 is defined */
-#if !defined(NSS_X86_OR_X64) && !defined(USE_ARM_GCM)
+#if !defined(NSS_X86_OR_X64) && !defined(USE_ARM_GCM) && !defined(USE_PPC_GCM)
 SECStatus
 gcm_HashWrite_hw(gcmHashContext *ghash, unsigned char *outbuf)
 {
@@ -65,7 +73,7 @@ gcm_HashZeroX_hw(gcmHashContext *ghash)
     PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     return SECFailure;
 }
-#endif /* !NSS_X86_OR_X64 && !USE_ARM_GCM */
+#endif /* !NSS_X86_OR_X64 && !USE_ARM_GCM && !USE_PPC_GCM */
 
 uint64_t
 get64(const unsigned char *bytes)
@@ -94,6 +102,8 @@ gcmHash_InitContext(gcmHashContext *ghash, const unsigned char *H, PRBool sw)
     ghash->h_high = get64(H);
 #ifdef USE_ARM_GCM
     if (arm_pmull_support() && !sw) {
+#ifdef USE_PPC_GCM
+    if (ppc_207_support() && !sw) {
 #else
     if (clmul_support() && !sw) {
 #endif
